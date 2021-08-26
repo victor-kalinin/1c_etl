@@ -1,6 +1,5 @@
 from typing import Dict
 from sqlalchemy import and_
-import requests
 
 from .rest import Rest
 
@@ -18,7 +17,7 @@ class RestParams(Rest):
         return self._month_scope_t_(lambda x: x.strftime('%d.%m.%Y'))
 
     def _request_(self, url: str):
-        return requests.get(url, params=self.params, auth=(self.settings.USER, self.settings.PASSWORD))
+        return self.http.get(url, params=self.params, auth=(self.settings.USER, self.settings.PASSWORD))
 
     def clear_all(self, *args, **kwargs):
         super().clear(*args, **kwargs)

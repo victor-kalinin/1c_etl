@@ -6,7 +6,7 @@ from app.core.consts import CONFIG_OS_PATH, CONFIG_FILE, CREDENTIALS_KEY, FILENA
 
 
 PARSER = argparse.ArgumentParser()
-PARSER.add_argument('-e', '--env', choices=['PROD', 'DEV', 'TEST'], required=True,
+PARSER.add_argument('-e', '--env', choices=['PROD', 'DEV'], required=True,
                     help='Рабочее окружение')
 PARSER.add_argument('-t', '--table_name', action='store', type=str, default=None,
                     help='Название таблицы для единичной выгрузки')
@@ -14,8 +14,6 @@ PARSER.add_argument('-m', '--months', action='store', type=int, default=2,
                     help='Количество месяцев для выгрузки периода')
 PARSER.add_argument('-d', '--direction', choices=['FORWARD', 'BACKWARD'], default='BACKWARD',
                     help='Направление формирования периода выгрузки')
-PARSER.add_argument('-wa', '--warmup_api', action='store_true',
-                    help='Использование функции "прогрева" API при зависании запросов')
 
 
 def main(parsed_args):

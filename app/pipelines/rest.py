@@ -5,6 +5,8 @@ import json
 from typing import List
 from pydantic import parse_obj_as, BaseModel
 from sqlalchemy.orm import Session
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 from app.core import consts
 from app.core.helpers import fill_settings
@@ -14,8 +16,20 @@ class Rest:
     def __init__(self, db: Session, alias_name: str):
         self.alias_name = alias_name
         self.db = db
+        self.http = self._set_request_session_()
         self.module_models = importlib.import_module(consts.MODELS_MODULE_PATH(alias_name))
         self.module_schemas = importlib.import_module(consts.SCHEMAS_MODULE_PATH(alias_name))
+
+    @staticmethod
+    def _set_request_session_():
+        retry_strategy = Retry(total=consts.API_RETRY_COUNT,
+                               status_forcelist=[429, 500, 502, 503, 504],
+                               method_whitelist=["HEAD", "GET", "OPTIONS"])
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        http = requests.Session()
+        http.mount("https://", adapter)
+        http.mount("http://", adapter)
+        return http
 
     @property
     def settings(self):
@@ -25,7 +39,7 @@ class Rest:
         return fill_settings(getattr(api_module, class_name)())
 
     def _request_(self, url: str):
-        return requests.get(url, auth=(self.settings.USER, self.settings.PASSWORD))
+        return self.http.get(url, auth=(self.settings.USER, self.settings.PASSWORD))
 
     def extract(self, route: str, schema_name: str):
         url = ''.join((self.settings.API_PATH, route))

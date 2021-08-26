@@ -1,5 +1,4 @@
 from typing import Dict
-import requests
 
 from .rest_params import RestParams
 from app.core.helpers import sql_to_json
@@ -12,7 +11,7 @@ class RestAssert(RestParams):
         self._data = None
 
     def _request_(self, url: str):
-        return requests.post(url, data=self._data, auth=(self.settings.USER, self.settings.PASSWORD))
+        return self.http.post(url, data=self._data, auth=(self.settings.USER, self.settings.PASSWORD))
 
     def extract(self, route: str, schema_name: str):
         params_sql = self._month_scope_t_(lambda x: x.date())

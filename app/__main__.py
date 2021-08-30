@@ -1,10 +1,10 @@
 import sys
 
-from app import main
+from app.main import main, PARSER
 
 if len(sys.argv) == 1:
-    print('\nERROR! Вы должны выбрать хотя бы одну опцию.\n')
-    main.PARSER.print_help()
+    print('\nERROR! Вы должны выбрать хотя бы тип рабочего окружения [-e].\n')
+    PARSER.print_help()
 else:
-    parsed_arguments = main.PARSER.parse_args(sys.argv[1:])
-    main.main(parsed_arguments)
+    parsed_arguments = PARSER.parse_args(sys.argv[1:])
+    main(parsed_arguments)

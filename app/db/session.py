@@ -6,12 +6,10 @@ from app.core.helpers import fill_settings
 from app.config.dwh_db import DWHDBSettings
 
 
-engine = create_engine(str(fill_settings(DWHDBSettings())))
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
 def get_db() -> Generator:
-    db = SessionLocal()
+    engine = create_engine(str(fill_settings(DWHDBSettings())))
+    session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    db = session_local()
     try:
         yield db
     finally:

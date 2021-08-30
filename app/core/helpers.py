@@ -36,7 +36,7 @@ def execute_sql(db: Session, sql: str, values: Dict = None):
 
 def sql_to_json(db: Session, sql: str, values: Dict = None):
     res = execute_sql(db, sql, values)
-    return [json.dumps(dict(row)) for row in res]
+    return [json.dumps(dict(row)) for row in res if row is not None]
 
 
 def month_scope(months: int, direction: Direction) -> Dict:
@@ -69,8 +69,10 @@ def get_tables_dict():
                     if isinstance(node_body, ast.Assign) and len(node_body.targets) == 1:
                         target = node_body.targets[0]
                         if isinstance(target, ast.Name) and target.id == '__tablename__':
-                            table_dict[ast.literal_eval(node_body.value)] = {'alias': module_name.split('_', 1)[1],
-                                                                             'table_name': node.name}
+                            alias = module_name.split('_', 1)[1]
+                            table_dict[ast.literal_eval(node_body.value)] = {'alias': alias,
+                                                                             'table_name': node.name,
+                                                                             'group': get_alias_group(alias)}
     return table_dict
 
 

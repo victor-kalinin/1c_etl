@@ -10,6 +10,7 @@ from requests.packages.urllib3.util.retry import Retry
 
 from app.core import consts
 from app.core.helpers import fill_settings
+from app.core.logger import get_logger
 
 
 class Rest:
@@ -19,6 +20,7 @@ class Rest:
         self.http = self._set_request_session_()
         self.module_models = importlib.import_module(consts.MODELS_MODULE_PATH(alias_name))
         self.module_schemas = importlib.import_module(consts.SCHEMAS_MODULE_PATH(alias_name))
+        self.logger = get_logger(self.__class__.__name__)
 
     @staticmethod
     def _set_request_session_():
@@ -65,18 +67,25 @@ class Rest:
 
     def start(self, table_name=None, clear=True):
         def etl(_table_name, _route_path):
-            if clear:  # Очищаем таблицу перез загрузкой данных
+            if clear:
+                self.logger.info(f'Очищаем таблицу {self.alias_name}.{_table_name} перез загрузкой данных')
                 self.clear(_table_name)
+                self.logger.info(f'Таблица очищена успешно')
 
-            # Получаем данные из 1С, используя данные маршрутов из схемы settings
+            self.logger.info(f'Получаем данные из 1С, используя данные маршрутов [{_route_path}]')
             rest_data = self.extract(_route_path, _table_name)
+            self.logger.info(f'Данные получены успешно')
 
-            # Загружаем данные таблицу в целевой базе данных
+            self.logger.info(f'Загружаем данные в БД [{self.alias_name}.{_table_name}]')
             for item in rest_data:
                 self.load(_table_name, item)
+            self.logger.info(f'Данные загружены в БД успешно')
 
-        if table_name is not None:
-            etl(table_name, self.settings.ROUTES.get(table_name))
-        else:
-            for table_name, route_path in self.settings.ROUTES.items():
-                etl(table_name, route_path)
+        try:
+            if table_name is not None:
+                etl(table_name, self.settings.ROUTES.get(table_name))
+            else:
+                for table_name, route_path in self.settings.ROUTES.items():
+                    etl(table_name, route_path)
+        except Exception as e:
+            self.logger.error(e)

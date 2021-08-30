@@ -1,5 +1,5 @@
-from typing import Optional
-from pydantic import Json
+from typing import Optional, Any, Dict, List
+from pydantic import Json, BaseModel
 from datetime import datetime
 
 from app.core.templates.schema import TemplateModel
@@ -66,4 +66,4 @@ class Documents(TemplateModel):
     НГ_Ссылка: str
     НГ_Код: str
     НГ_Наименование: str
-    ПроцентРаспределенияНаПродукт: Json
+    ПроцентРаспределенияНаПродукт: List[Dict[str, Any]]

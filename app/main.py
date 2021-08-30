@@ -2,12 +2,13 @@ from os import environ
 from os.path import join
 import argparse
 
-from app.core.consts import CONFIG_OS_PATH, CONFIG_FILE, CREDENTIALS_KEY, FILENAME_KEY
+from app.core import consts
 from app.core.helpers import get_tables_dict, month_scope, get_alias_from_tablename
 from app.db.session import get_db
 from app.core.sql import work_bonus
 from app.core.enums import Direction
 from app.pipelines import rest, rest_params, rest_assert
+from app.core.logger import get_logger
 
 
 PARSER = argparse.ArgumentParser()
@@ -19,6 +20,8 @@ PARSER.add_argument('-m', '--months', action='store', type=int, default=2,
                     help='Количество месяцев для выгрузки периода')
 PARSER.add_argument('-d', '--direction', choices=['FORWARD', 'BACKWARD'], default='BACKWARD',
                     help='Направление формирования периода выгрузки')
+PARSER.add_argument('-l', '--log_path', action='store', type=str, default=consts.LOGS_OS_PATH,
+                    help='Каталог для выгрузки лог-файла')
 
 
 def main(parsed_args):
@@ -37,16 +40,20 @@ def main(parsed_args):
         if pipeline is not None:
             pipeline.start(table_name=params['table_name'])
 
-    config_dir = CONFIG_OS_PATH
+    logger = get_logger(__name__)
+    config_dir = consts.CONFIG_OS_PATH
 
-    if parsed_args.env == 'PROD' and environ.get(CREDENTIALS_KEY) is not None:
-        config_dir = environ.get(CREDENTIALS_KEY)
+    if parsed_args.env == 'PROD' and environ.get(consts.CREDENTIALS_KEY) is not None:
+        config_dir = environ.get(consts.CREDENTIALS_KEY)
 
-    environ[FILENAME_KEY] = join(config_dir, CONFIG_FILE)
+    environ[consts.FILENAME_KEY] = join(config_dir, consts.CONFIG_FILE)
+    environ[consts.LOGFILE_KEY] = join(parsed_args.log_path, consts.LOG_FILE)
 
     if parsed_args.table_name is not None:
+        logger.info(f'Выбран режим выгрузки одной таблицы [{parsed_args.table_name}]')
         table_params = get_alias_from_tablename(parsed_args.table_name)
         start_pipeline(table_params)
     else:
+        logger.info('Выбран режим пакетной выгрузки')
         for _, table_desc in get_tables_dict().items():
             start_pipeline(table_desc)

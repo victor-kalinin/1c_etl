@@ -53,11 +53,14 @@ class Rest:
     def transform(self):
         raise NotImplemented
 
-    def clear(self, model_name: str):
+    def clear_all(self, model_name: str):
         model = getattr(self.module_models, model_name)
         num_rows_deleted = self.db.query(model).delete()
         self.db.commit()
         return num_rows_deleted
+
+    def clear(self, model_name: str):
+        self.clear_all(model_name)
 
     def load(self, model_name: str, item: BaseModel):
         model = getattr(self.module_models, model_name)
@@ -65,21 +68,28 @@ class Rest:
         self.db.add(row)
         self.db.commit()
 
-    def start(self, table_name=None, clear=True):
+    def start(self, table_name=None, clear=False):
         def etl(_table_name, _route_path):
             if clear:
-                self.logger.info(f'Очищаем таблицу {self.alias_name}.{_table_name} перез загрузкой данных')
-                self.clear(_table_name)
-                self.logger.info(f'Таблица очищена успешно')
+                self.logger.info(f'Очистка таблицы {_table_name}')
+                return self.clear_all(model_name=_table_name)
 
-            self.logger.info(f'Получаем данные из 1С, используя данные маршрутов [{_route_path}]')
+            # self.logger.info(f'Получаем данные из 1С, используя данные маршрутов [{_route_path}]')
             rest_data = self.extract(_route_path, _table_name)
-            self.logger.info(f'Данные получены успешно')
+            # self.logger.info(f'Данные получены успешно')
 
-            self.logger.info(f'Загружаем данные в БД [{self.alias_name}.{_table_name}]')
-            for item in rest_data:
-                self.load(_table_name, item)
-            self.logger.info(f'Данные загружены в БД успешно')
+            if rest_data and len(rest_data) > 0:
+                # self.logger.info(f'Очищаем таблицу {self.alias_name}.{_table_name} перез загрузкой данных')
+                self.clear(_table_name)
+                # self.logger.info(f'Таблица очищена успешно')
+
+                # self.logger.info(f'Загружаем данные в БД [{self.alias_name}.{_table_name}]')
+                for item in rest_data:
+                    self.load(_table_name, item)
+                # self.logger.info(f'Данные загружены в БД успешно')
+            else:
+                # Данные не были получены
+                pass
 
         try:
             if table_name is not None:

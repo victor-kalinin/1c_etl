@@ -21,8 +21,8 @@ class RestAssert(RestParams):
             result.extend(super().extract(route=route, schema_name=schema_name))
         return result
 
-    def start(self, table_name=None, clear=True):
+    def start(self, table_name=None, clear=None):
         if table_name is None:
             raise NotImplementedError('Функционал пакетной обработки не может быть реализован. '
                                       'Необходимо явное указание table_name')
-        super().start(clear=clear, table_name=table_name)
+        super().start(table_name=table_name, clear=clear)

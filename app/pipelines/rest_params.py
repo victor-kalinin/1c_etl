@@ -19,9 +19,6 @@ class RestParams(Rest):
     def _request_(self, url: str):
         return self.http.get(url, params=self.params, auth=(self.settings.USER, self.settings.PASSWORD))
 
-    def clear_all(self, *args, **kwargs):
-        super().clear(*args, **kwargs)
-
     def clear(self, model_name: str):
         model = getattr(self.module_models, model_name)
         filter_field = getattr(model, model.__filterfield__)

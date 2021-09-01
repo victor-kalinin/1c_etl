@@ -3,9 +3,9 @@ from os.path import join
 import argparse
 
 from app.core import consts
-from app.core.helpers import get_tables_dict, month_scope, get_alias_from_tablename
+from app.core.helpers import get_tables_dict, month_scope, get_alias_from_tablename, get_alias_group, execute_sql
 from app.db.session import get_db
-from app.core.sql import work_bonus
+from app.core.sql import work_bonus, reload_queries
 from app.core.enums import Direction
 from app.pipelines import rest, rest_params, rest_assert
 from app.core.logger import get_logger
@@ -14,8 +14,13 @@ from app.core.logger import get_logger
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument('-e', '--env', choices=['PROD', 'DEV'], required=True,
                     help='Рабочее окружение')
+PARSER.add_argument('-g', '--groups', choices=['static', 'params', 'accums', 'assert'],
+                    type=str, nargs='+', default=['static', 'params', 'assert'],
+                    help='Список групп таблиц для пакетной выгрузки данных')
 PARSER.add_argument('-t', '--table_name', action='store', type=str, default=None,
                     help='Название таблицы для единичной выгрузки')
+PARSER.add_argument('-ca', '--clear_all', action='store_true',
+                    help='Режим полной очистки таблиц без загрузки данных')
 PARSER.add_argument('-m', '--months', action='store', type=int, default=2,
                     help='Количество месяцев для выгрузки периода')
 PARSER.add_argument('-d', '--direction', choices=['FORWARD', 'BACKWARD'], default='BACKWARD',
@@ -38,7 +43,7 @@ def main(parsed_args):
             pipeline = rest_assert.RestAssert(db=_db, alias_name=params['alias'], month_scope=_month_scope,
                                               sql_query=work_bonus)
         if pipeline is not None:
-            pipeline.start(table_name=params['table_name'])
+            pipeline.start(table_name=params['table_name'], clear=parsed_args.clear_all)
 
     logger = get_logger(__name__)
     config_dir = consts.CONFIG_OS_PATH
@@ -56,4 +61,9 @@ def main(parsed_args):
     else:
         logger.info('Выбран режим пакетной выгрузки')
         for _, table_desc in get_tables_dict().items():
-            start_pipeline(table_desc)
+            if get_alias_group(table_desc.get('alias')) in parsed_args.groups:
+                start_pipeline(table_desc)
+
+    # Обновление структуры nrml
+    for query in reload_queries:
+        execute_sql(next(get_db()), sql=query)

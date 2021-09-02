@@ -10,7 +10,7 @@ from requests.packages.urllib3.util.retry import Retry
 
 from app.core import consts
 from app.core.helpers import fill_settings
-from app.core.logger import get_logger
+from app.core.enums import ORMOperations
 
 
 class Rest:
@@ -20,7 +20,6 @@ class Rest:
         self.http = self._set_request_session_()
         self.module_models = importlib.import_module(consts.MODELS_MODULE_PATH(alias_name))
         self.module_schemas = importlib.import_module(consts.SCHEMAS_MODULE_PATH(alias_name))
-        self.logger = get_logger(self.__class__.__name__)
 
     @staticmethod
     def _set_request_session_():
@@ -40,11 +39,13 @@ class Rest:
                       if m[1].__module__ == api_module.__name__][0]
         return fill_settings(getattr(api_module, class_name)())
 
+    def _url_(self, _route_path: str):
+        return ''.join((self.settings.API_PATH, _route_path))
+
     def _request_(self, url: str):
         return self.http.get(url, auth=(self.settings.USER, self.settings.PASSWORD))
 
-    def extract(self, route: str, schema_name: str):
-        url = ''.join((self.settings.API_PATH, route))
+    def extract(self, url: str, schema_name: str):
         schema = getattr(self.module_schemas, schema_name)
         res = self._request_(url)
         res_dict = json.loads(res.content.decode())
@@ -68,34 +69,34 @@ class Rest:
         self.db.add(row)
         self.db.commit()
 
-    def start(self, table_name=None, clear=False):
-        def etl(_table_name, _route_path):
+    def start(self, table_class=None, clear=False):
+        def etl(_table_class, _route_path):
             if clear:
-                self.logger.info(f'Очистка таблицы {_table_name}')
-                return self.clear_all(model_name=_table_name)
+                count_deleted_rows = self.clear_all(model_name=_table_class)
+                return {'operation': ORMOperations.CLEAR,
+                        'count_rows': count_deleted_rows}
 
-            # self.logger.info(f'Получаем данные из 1С, используя данные маршрутов [{_route_path}]')
-            rest_data = self.extract(_route_path, _table_name)
-            # self.logger.info(f'Данные получены успешно')
+            url = self._url_(_route_path)
+            rest_data = self.extract(url, _table_class)
+            row_count = len(rest_data)
 
-            if rest_data and len(rest_data) > 0:
-                # self.logger.info(f'Очищаем таблицу {self.alias_name}.{_table_name} перез загрузкой данных')
-                self.clear(_table_name)
-                # self.logger.info(f'Таблица очищена успешно')
+            if rest_data is None:
+                raise TypeError(f'Данные не были получены из REST API. url: {url}')
 
-                # self.logger.info(f'Загружаем данные в БД [{self.alias_name}.{_table_name}]')
+            if row_count > 0:
+                self.clear(_table_class)
+
                 for item in rest_data:
-                    self.load(_table_name, item)
-                # self.logger.info(f'Данные загружены в БД успешно')
+                    self.load(_table_class, item)
+                return {'operation': ORMOperations.LOAD,
+                        'count_rows': row_count}
             else:
-                # Данные не были получены
-                pass
+                raise ValueError(f'Были получен пустой ответ. url: {url}')
 
-        try:
-            if table_name is not None:
-                etl(table_name, self.settings.ROUTES.get(table_name))
-            else:
-                for table_name, route_path in self.settings.ROUTES.items():
-                    etl(table_name, route_path)
-        except Exception as e:
-            self.logger.error(e)
+        if table_class is not None:
+            return etl(table_class, self.settings.ROUTES.get(table_class))
+        else:
+            result = []
+            for table_class, route_path in self.settings.ROUTES.items():
+                result = result.append(etl(table_class, route_path))
+            return result

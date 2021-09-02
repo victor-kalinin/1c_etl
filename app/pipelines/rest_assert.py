@@ -18,11 +18,11 @@ class RestAssert(RestParams):
         sql_result = sql_to_json(self.db, self.sql_query, params_sql)
         result = []
         for self._data in sql_result:
-            result.extend(super().extract(route=route, schema_name=schema_name))
+            result.extend(super().extract(self._url_(route), schema_name=schema_name))
         return result
 
-    def start(self, table_name=None, clear=None):
-        if table_name is None:
+    def start(self, table_class=None, clear=None):
+        if table_class is None:
             raise NotImplementedError('Функционал пакетной обработки не может быть реализован. '
                                       'Необходимо явное указание table_name')
-        super().start(table_name=table_name, clear=clear)
+        return super().start(table_class=table_class, clear=clear)

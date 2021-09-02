@@ -7,7 +7,7 @@ def compile_path(major_path):
 
 MODELS_OS_PATH = join('app', 'models')
 CONFIG_OS_PATH = join('app', 'config')
-LOGS_OS_PATH = join('app', 'logs')
+LOGS_OS_PATH = join('app', 'logging', 'logs')
 
 MODELS_MODULE_PATH = compile_path('app.models.models')
 SCHEMAS_MODULE_PATH = compile_path('app.schemas.schemas')

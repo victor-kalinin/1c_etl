@@ -1,6 +1,8 @@
+import argparse
+from typing import Dict
 from os import environ
 from os.path import join
-import argparse
+
 
 from app.core import consts
 from app.core.helpers import get_tables_dict, month_scope, get_alias_from_tablename, get_alias_group, execute_sql
@@ -8,7 +10,8 @@ from app.db.session import get_db
 from app.core.sql import work_bonus, reload_queries
 from app.core.enums import Direction
 from app.pipelines import rest, rest_params, rest_assert
-from app.core.logger import get_logger
+from app.logging.logger import get_logger
+from app.logging.decorators import logging_this
 
 
 PARSER = argparse.ArgumentParser()
@@ -30,7 +33,8 @@ PARSER.add_argument('-l', '--log_path', action='store', type=str, default=consts
 
 
 def main(parsed_args):
-    def start_pipeline(params):
+    @logging_this
+    def start_pipeline(params: Dict):
         pipeline = None
         _db = next(get_db())
         _month_scope = month_scope(parsed_args.months, Direction.__getattr__(parsed_args.direction))
@@ -43,10 +47,14 @@ def main(parsed_args):
             pipeline = rest_assert.RestAssert(db=_db, alias_name=params['alias'], month_scope=_month_scope,
                                               sql_query=work_bonus)
         if pipeline is not None:
-            pipeline.start(table_name=params['table_name'], clear=parsed_args.clear_all)
+            res = pipeline.start(table_class=params['table_class'], clear=parsed_args.clear_all)
+            params.update(res)
+            return params
 
-    logger = get_logger(__name__)
     config_dir = consts.CONFIG_OS_PATH
+    logger_root = get_logger('ROOT')
+    logger_nrml = get_logger('NRML')
+    logger_root.info('НАЧАЛО РАБОТЫ')
 
     if parsed_args.env == 'PROD' and environ.get(consts.CREDENTIALS_KEY) is not None:
         config_dir = environ.get(consts.CREDENTIALS_KEY)
@@ -55,15 +63,21 @@ def main(parsed_args):
     environ[consts.LOGFILE_KEY] = join(parsed_args.log_path, consts.LOG_FILE)
 
     if parsed_args.table_name is not None:
-        logger.info(f'Выбран режим выгрузки одной таблицы [{parsed_args.table_name}]')
         table_params = get_alias_from_tablename(parsed_args.table_name)
+        table_params['table_name'] = parsed_args.table_name
         start_pipeline(table_params)
     else:
-        logger.info('Выбран режим пакетной выгрузки')
-        for _, table_desc in get_tables_dict().items():
-            if get_alias_group(table_desc.get('alias')) in parsed_args.groups:
-                start_pipeline(table_desc)
+        for table_name, table_params in get_tables_dict().items():
+            if get_alias_group(table_params.get('alias')) in parsed_args.groups:
+                table_params['table_name'] = table_name
+                start_pipeline(table_params)
 
     # Обновление структуры nrml
-    for query in reload_queries:
-        execute_sql(next(get_db()), sql=query)
+    try:
+        for query_line in reload_queries:
+            execute_sql(next(get_db()), sql=query_line)
+            logger_nrml.info(f'Выполнена процедура: {query_line}')
+    except Exception as e:
+        logger_nrml.error(e)
+
+    logger_root.info('КОНЕЦ РАБОТЫ')

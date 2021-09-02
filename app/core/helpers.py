@@ -71,7 +71,7 @@ def get_tables_dict():
                         if isinstance(target, ast.Name) and target.id == '__tablename__':
                             alias = module_name.split('_', 1)[1]
                             table_dict[ast.literal_eval(node_body.value)] = {'alias': alias,
-                                                                             'table_name': node.name,
+                                                                             'table_class': node.name,
                                                                              'group': get_alias_group(alias)}
     return table_dict
 

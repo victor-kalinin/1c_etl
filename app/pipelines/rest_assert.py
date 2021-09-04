@@ -1,7 +1,7 @@
+import json
 from typing import Dict
 
 from .rest_params import RestParams
-from app.core.helpers import sql_to_json
 
 
 class RestAssert(RestParams):
@@ -15,7 +15,8 @@ class RestAssert(RestParams):
 
     def extract(self, route: str, schema_name: str):
         params_sql = self._month_scope_t_(lambda x: x.date())
-        sql_result = sql_to_json(self.db, self.sql_query, params_sql)
+        res = self._execute_sql_(self.sql_query, params_sql)
+        sql_result = [json.dumps(dict(row)) for row in res if row is not None]
         result = []
         for self._data in sql_result:
             result.extend(super().extract(self._url_(route), schema_name=schema_name))

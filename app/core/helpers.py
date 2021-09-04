@@ -1,7 +1,5 @@
-import json
 import ast
 from typing import Dict
-from sqlalchemy.orm import Session
 from os.path import basename, isfile, join
 from os import environ
 from datetime import datetime
@@ -26,17 +24,6 @@ def fill_settings(settings_obj):
         raise configparser.ParsingError
 
     return settings_obj
-
-
-def execute_sql(db: Session, sql: str, values: Dict = None):
-    if values is None:
-        values = {}
-    return db.execute(sql, values).fetchall()
-
-
-def sql_to_json(db: Session, sql: str, values: Dict = None):
-    res = execute_sql(db, sql, values)
-    return [json.dumps(dict(row)) for row in res if row is not None]
 
 
 def month_scope(months: int, direction: Direction) -> Dict:

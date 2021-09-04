@@ -27,6 +27,7 @@ class Contractors(Base):
 class Departments(Base):
     __tablename__ = 'rs1c_zup_departments'
     __table_args__ = {'schema': 'rsrc'}
+    __post_execute__ = 'nrml.reload_dep_hierarchy()'
 
     Код = Column(Text, primary_key=True)
     Наименование = Column(Text, primary_key=True)

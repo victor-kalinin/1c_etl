@@ -14,7 +14,3 @@ FROM (
     ) t
 GROUP BY period_, rn
 '''
-
-reload_queries = ('SELECT nrml.reload_dep_hierarchy();',
-                  'SELECT nrml.reload_mstructure_occupation_history();',
-                  'SELECT nrml.reload_mstructure_heads_history();')

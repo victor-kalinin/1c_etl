@@ -6,6 +6,7 @@ from app.db.base import Base
 class ManagementStructureHeads(Base):
     __tablename__ = 'rs1c_do_management_structure_heads'
     __table_args__ = {'schema': 'rsrc'}
+    __post_execute__ = 'nrml.reload_mstructure_heads_history()'
     
     Структура = Column(Text, primary_key=True)
     ФизическоеЛицоРуководитель = Column(Text, primary_key=True)
@@ -15,6 +16,7 @@ class ManagementStructureHeads(Base):
 class ManagementStructureOccupation(Base):
     __tablename__ = 'rs1c_do_management_structure_occupation'
     __table_args__ = {'schema': 'rsrc'}
+    __post_execute__ = 'nrml.reload_mstructure_occupation_history()'
     
     Структура = Column(Text, primary_key=True)
     ФизическоеЛицо = Column(Text, primary_key=True)

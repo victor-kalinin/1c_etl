@@ -2,7 +2,7 @@ import importlib
 import inspect
 import requests
 import json
-from typing import List
+from typing import List, Dict
 from pydantic import parse_obj_as, BaseModel
 from sqlalchemy.orm import Session
 from requests.adapters import HTTPAdapter
@@ -44,6 +44,11 @@ class Rest:
 
     def _request_(self, url: str):
         return self.http.get(url, auth=(self.settings.USER, self.settings.PASSWORD))
+
+    def _execute_sql_(self, sql: str, values: Dict = None):
+        if values is None:
+            values = {}
+        return self.db.execute(sql, values).fetchall()
 
     def extract(self, url: str, schema_name: str):
         schema = getattr(self.module_schemas, schema_name)
@@ -88,10 +93,17 @@ class Rest:
 
                 for item in rest_data:
                     self.load(_table_class, item)
+
+                # Обновление структуры nrml
+                model = getattr(self.module_models, _table_class)
+                post_execute_proc = model.__dict__.get('__post_execute__')
+                if post_execute_proc is not None:
+                    self._execute_sql_(f'SELECT {post_execute_proc};')
+
                 return {'operation': ORMOperations.LOAD,
                         'count_rows': row_count}
             else:
-                raise ValueError(f'Были получен пустой ответ. url: {url}')
+                raise ValueError(f'Был получен пустой ответ. url: {url}')
 
         if table_class is not None:
             return etl(table_class, self.settings.ROUTES.get(table_class))

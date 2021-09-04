@@ -12,12 +12,12 @@ class RestParams(Rest):
     def _month_scope_t_(self, func):
         return {key: func(value) for key, value in self.month_scope.items()}
 
+    def _request_(self, url: str):
+        return self.http.get(url, params=self.params, auth=(self.settings.USER, self.settings.PASSWORD))
+
     @property
     def params(self):
         return self._month_scope_t_(lambda x: x.strftime('%d.%m.%Y'))
-
-    def _request_(self, url: str):
-        return self.http.get(url, params=self.params, auth=(self.settings.USER, self.settings.PASSWORD))
 
     def clear(self, model_name: str):
         model = getattr(self.module_models, model_name)

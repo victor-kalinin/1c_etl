@@ -5,9 +5,9 @@ from os.path import join
 
 
 from app.core import consts
-from app.core.helpers import get_tables_dict, month_scope, get_alias_from_tablename, get_alias_group, execute_sql
+from app.core.helpers import get_tables_dict, month_scope, get_alias_from_tablename, get_alias_group
 from app.db.session import get_db
-from app.core.sql import work_bonus, reload_queries
+from app.core.sql import work_bonus
 from app.core.enums import Direction
 from app.pipelines import rest, rest_params, rest_assert
 from app.logging.logger import get_logger
@@ -53,7 +53,6 @@ def main(parsed_args):
 
     config_dir = consts.CONFIG_OS_PATH
     logger_root = get_logger('ROOT')
-    logger_nrml = get_logger('NRML')
     logger_root.info('НАЧАЛО РАБОТЫ')
 
     if parsed_args.env == 'PROD' and environ.get(consts.CREDENTIALS_KEY) is not None:
@@ -71,13 +70,5 @@ def main(parsed_args):
             if get_alias_group(table_params.get('alias')) in parsed_args.groups:
                 table_params['table_name'] = table_name
                 start_pipeline(table_params)
-
-    # Обновление структуры nrml
-    try:
-        for query_line in reload_queries:
-            execute_sql(next(get_db()), sql=query_line)
-            logger_nrml.info(f'Выполнена процедура: {query_line}')
-    except Exception as e:
-        logger_nrml.error(e)
 
     logger_root.info('КОНЕЦ РАБОТЫ')

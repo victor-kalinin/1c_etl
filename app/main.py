@@ -28,8 +28,6 @@ PARSER.add_argument('-m', '--months', action='store', type=int, default=2,
                     help='Количество месяцев для выгрузки периода')
 PARSER.add_argument('-d', '--direction', choices=['FORWARD', 'BACKWARD'], default='BACKWARD',
                     help='Направление формирования периода выгрузки')
-PARSER.add_argument('-l', '--log_path', action='store', type=str, default=consts.LOGS_OS_PATH,
-                    help='Каталог для выгрузки лог-файла')
 
 
 def main(parsed_args):

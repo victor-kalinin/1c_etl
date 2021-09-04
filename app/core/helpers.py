@@ -1,19 +1,18 @@
 import ast
 from typing import Dict
 from os.path import basename, isfile, join
-from os import environ
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import configparser
 from glob import glob
 
 from app.core.enums import Direction
-from app.core.consts import MODELS_OS_PATH, FILENAME_KEY
+from app.core.consts import MODELS_DIR_PATH, CONFIG_PATH
 
 
 def fill_settings(settings_obj):
     config = configparser.ConfigParser()
-    config.read(environ[FILENAME_KEY])
+    config.read(CONFIG_PATH)
     attrs = [attr for attr in dir(settings_obj) if not attr.startswith('_')]
     try:
         for attr in attrs:
@@ -46,7 +45,7 @@ def get_alias_group(alias_name):
 
 def get_tables_dict():
     table_dict = {}
-    for module_name, module_path in get_modules_names(MODELS_OS_PATH).items():
+    for module_name, module_path in get_modules_names(MODELS_DIR_PATH).items():
         with open(module_path, encoding='utf-8') as f:
             tree = ast.parse(f.read())
 

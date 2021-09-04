@@ -1,7 +1,7 @@
 from time import time
 from functools import wraps
 
-from app.logging.logger import get_logger
+from app.logging_.logger import get_logger
 
 
 def logging_this(func):

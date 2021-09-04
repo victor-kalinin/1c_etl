@@ -1,21 +1,16 @@
 import argparse
 from typing import Dict
-from os import environ
-from os.path import join
 
-
-from app.core import consts
 from app.core.helpers import get_tables_dict, month_scope, get_alias_from_tablename, get_alias_group
-from app.db.session import get_db
 from app.core.sql import work_bonus
 from app.core.enums import Direction
 from app.pipelines import rest, rest_params, rest_assert
-from app.logging.logger import get_logger
-from app.logging.decorators import logging_this
+from app.logging_.logger import get_logger
+from app.logging_.decorators import logging_this
 
 
 PARSER = argparse.ArgumentParser()
-PARSER.add_argument('-e', '--env', choices=['PROD', 'DEV'], required=True,
+PARSER.add_argument('-e', '--env', choices=['PROD', 'DEV', 'STAGE'], required=True,
                     help='Рабочее окружение')
 PARSER.add_argument('-g', '--groups', choices=['static', 'params', 'accums', 'assert'],
                     type=str, nargs='+', default=['static', 'params', 'assert'],
@@ -31,6 +26,8 @@ PARSER.add_argument('-d', '--direction', choices=['FORWARD', 'BACKWARD'], defaul
 
 
 def main(parsed_args):
+    from app.db.session import get_db
+
     @logging_this
     def start_pipeline(params: Dict):
         pipeline = None
@@ -49,15 +46,15 @@ def main(parsed_args):
             params.update(res)
             return params
 
-    config_dir = consts.CONFIG_OS_PATH
+    # config_dir = consts.CONFIG_OS_PATH
     logger_root = get_logger('ROOT')
     logger_root.info('НАЧАЛО РАБОТЫ')
 
-    if parsed_args.env == 'PROD' and environ.get(consts.CREDENTIALS_KEY) is not None:
-        config_dir = environ.get(consts.CREDENTIALS_KEY)
+    # if parsed_args.env == 'PROD' and environ.get(consts.CREDENTIALS_KEY) is not None:
+    #     config_dir = environ.get(consts.CREDENTIALS_KEY)
 
-    environ[consts.FILENAME_KEY] = join(config_dir, consts.CONFIG_FILE)
-    environ[consts.LOGFILE_KEY] = join(parsed_args.log_path, consts.LOG_FILE)
+    # environ[consts.FILENAME_KEY] = join(config_dir, consts.CONFIG_FILE)
+    # environ[consts.LOGFILE_KEY] = join(parsed_args.log_path, consts.LOG_FILE)
 
     if parsed_args.table_name is not None:
         table_params = get_alias_from_tablename(parsed_args.table_name)

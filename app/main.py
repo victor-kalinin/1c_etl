@@ -46,15 +46,8 @@ def main(parsed_args):
             params.update(res)
             return params
 
-    # config_dir = consts.CONFIG_OS_PATH
     logger_root = get_logger('ROOT')
     logger_root.info('НАЧАЛО РАБОТЫ')
-
-    # if parsed_args.env == 'PROD' and environ.get(consts.CREDENTIALS_KEY) is not None:
-    #     config_dir = environ.get(consts.CREDENTIALS_KEY)
-
-    # environ[consts.FILENAME_KEY] = join(config_dir, consts.CONFIG_FILE)
-    # environ[consts.LOGFILE_KEY] = join(parsed_args.log_path, consts.LOG_FILE)
 
     if parsed_args.table_name is not None:
         table_params = get_alias_from_tablename(parsed_args.table_name)

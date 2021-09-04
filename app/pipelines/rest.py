@@ -98,7 +98,7 @@ class Rest:
                 model = getattr(self.module_models, _table_class)
                 post_execute_proc = model.__dict__.get('__post_execute__')
                 if post_execute_proc is not None:
-                    self._execute_sql_(f'SELECT {post_execute_proc};')
+                    self._execute_sql_(f'SELECT {post_execute_proc}();')
 
                 return {'operation': ORMOperations.LOAD,
                         'count_rows': row_count}

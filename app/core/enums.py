@@ -6,6 +6,11 @@ class Direction(Enum):
     BACKWARD = -1
 
 
-class ORMOperations(Enum):
-    CLEAR = 'УДАЛЕНИЕ'
-    LOAD = 'ДОБАВЛЕНИЕ'
+class Operations(Enum):
+    MAIN = 'работы приложения.'
+    TABLE = 'работы с таблицей'
+    TASK = 'операции'
+    CLEAR = 'Очистка таблицы'
+    EXTRACT = 'Получение данных'
+    LOAD = 'Добавление данных'
+    SQL = 'Выполнение SQL-запроса'

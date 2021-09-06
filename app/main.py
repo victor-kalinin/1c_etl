@@ -3,10 +3,9 @@ from typing import Dict
 
 from app.core.helpers import get_tables_dict, month_scope, get_alias_from_tablename, get_alias_group
 from app.core.sql import work_bonus
-from app.core.enums import Direction
+from app.core.enums import Direction, Operations
 from app.pipelines import rest, rest_params, rest_assert
-from app.logging_.logger import get_logger
-from app.logging_.decorators import logging_this
+from app.logging_.decorators import logging_this, try_except_wrap
 
 
 PARSER = argparse.ArgumentParser()
@@ -25,11 +24,13 @@ PARSER.add_argument('-d', '--direction', choices=['FORWARD', 'BACKWARD'], defaul
                     help='Направление формирования периода выгрузки')
 
 
+@logging_this(operation=Operations.MAIN)
 def main(parsed_args):
     from app.db.session import get_db
 
-    @logging_this
-    def start_pipeline(params: Dict):
+    @try_except_wrap
+    @logging_this(operation=Operations.TABLE, summary=True, timing=True)
+    def start_pipeline(params: Dict, **kwargs):
         pipeline = None
         _db = next(get_db())
         _month_scope = month_scope(parsed_args.months, Direction.__getattr__(parsed_args.direction))
@@ -43,20 +44,12 @@ def main(parsed_args):
                                               sql_query=work_bonus)
         if pipeline is not None:
             res = pipeline.start(table_class=params['table_class'], clear=parsed_args.clear_all)
-            params.update(res)
-            return params
-
-    logger_root = get_logger('ROOT')
-    logger_root.info('НАЧАЛО РАБОТЫ')
+            return res
 
     if parsed_args.table_name is not None:
         table_params = get_alias_from_tablename(parsed_args.table_name)
-        table_params['table_name'] = parsed_args.table_name
-        start_pipeline(table_params)
+        start_pipeline(table_params, msg=f'{parsed_args.table_name}.')
     else:
         for table_name, table_params in get_tables_dict().items():
             if get_alias_group(table_params.get('alias')) in parsed_args.groups:
-                table_params['table_name'] = table_name
-                start_pipeline(table_params)
-
-    logger_root.info('КОНЕЦ РАБОТЫ')
+                start_pipeline(table_params, msg=f'{table_name}.')

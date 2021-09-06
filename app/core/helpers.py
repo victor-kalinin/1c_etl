@@ -7,12 +7,12 @@ import configparser
 from glob import glob
 
 from app.core.enums import Direction
-from app.core.consts import MODELS_DIR_PATH, CONFIG_PATH
+from app.core.consts import MODELS_DIR_PATH, CREDENTIALS_PATH
 
 
 def fill_settings(settings_obj):
     config = configparser.ConfigParser()
-    config.read(CONFIG_PATH)
+    config.read(CREDENTIALS_PATH)
     attrs = [attr for attr in dir(settings_obj) if not attr.startswith('_')]
     try:
         for attr in attrs:

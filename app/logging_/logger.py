@@ -1,9 +1,9 @@
 import logging
 
 from app.core.consts import LOG_PATH
+from .handlers import BufferingSMTPHandler
 
-
-_log_format = f'%(asctime)s - [%(levelname)s] - %(name)s - %(message)s'
+_log_format = f'%(asctime)s - [%(levelname)s] - %(message)s'
 
 
 def get_file_handler():
@@ -20,9 +20,17 @@ def get_stream_handler():
     return stream_handler
 
 
+def get_smtp_handler():
+    smtp_handler = BufferingSMTPHandler(1000)
+    smtp_handler.setLevel(logging.DEBUG)
+    smtp_handler.setFormatter(logging.Formatter(_log_format))
+    return smtp_handler
+
+
 def get_logger(name):
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
     logger.addHandler(get_file_handler())
     logger.addHandler(get_stream_handler())
+    logger.addHandler(get_smtp_handler())
     return logger

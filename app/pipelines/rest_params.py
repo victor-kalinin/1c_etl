@@ -2,6 +2,8 @@ from typing import Dict
 from sqlalchemy import and_
 
 from .rest import Rest
+from app.logging_.decorators import logging_this
+from app.core.enums import Operations
 
 
 class RestParams(Rest):
@@ -19,6 +21,7 @@ class RestParams(Rest):
     def params(self):
         return self._month_scope_t_(lambda x: x.strftime('%d.%m.%Y'))
 
+    @logging_this(operation=Operations.TASK, task=Operations.CLEAR, summary=True, timing=True)
     def clear(self, model_name: str):
         model = getattr(self.module_models, model_name)
         filter_field = getattr(model, model.__filterfield__)

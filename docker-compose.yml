@@ -1,0 +1,9 @@
+version: '3.2'
+
+services:
+  app:
+    build: .
+    network_mode: host
+    volumes:
+      - ${MANGOCREDENTIALS}:/usr/src/app/public/credentials:ro
+      - /var/log/dwh:/usr/src/app/public/logs

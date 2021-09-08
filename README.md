@@ -155,10 +155,65 @@ SUBJECT: str = 'Logfile from 1CETL'
 
 Все таблицы в **Production Greenplum** созданы без поддержки ```PRIMARY KEY```. По этой причине инициализация 
 базы данных посредством ORM SQLAlchemy ```create_new_db() :: app/db/init.py``` приведет к некорректной структуре. 
-Поэтому операцию создания таблиц в ```STAGE``` базе данных необходимо выполнить в корневом каталоге проекта следующей командой : 
+Поэтому операцию создания таблиц в ```STAGE``` базе данных необходимо выполнить в корневом каталоге проекта 
+следующей командой: 
 
 ```commandline
 python app/db/init_core.py
 ```
 
+При добавлении описаний новых моделей в формате SQLAlchemy ORM, необходимо также наполнять данный файл описаниями
+моделей в формате SQLAlchemy Core для последующей успешной инициализации базы данных в ```STAGE``` окружении. 
+Для ```PROD``` среды в этом нет необходимости.
+
 ## Добавление новых моделей и API routes 
+
+Для добавления в приложение новых источников данных и таблиц хранения необходимо создать новые файлы либо 
+дополнить существующие в папках ```app/config/app_conn```, ```app/models``` и ```app/schemas```
+
+### Добавление новых routes (app/config/app_conn)
+
+```python
+class ConsSettings(APISettings):
+    CONFIG_KEY = 'Api1sConsProd'    # Название ключа из файла mangodb.ini
+    ROUTES = {'CatalogCfo': '/catalog?name=CFO',
+              ... }
+    
+    # Необходимо добавить новое ключ-значение в словарь ROUTES следующего вида:
+    # {'NameOfModelClass': '/url/to/api/route'}
+
+    # 'NameOfModelClass' - имя класса описания модели таблицы в формате ORM из  
+    #                      одноименного файла в папке app/models 
+```
+
+### Добавление новой ORM модели данных (app/models)
+
+```python
+class CatalogCfo(Base):
+    __tablename__ = 'rs1c_cons_catalog_cfo'     # Имя физической таблицы в базе данных
+    __table_args__ = {'schema': 'rsrc'}         # Название схемы хранения таблиц
+    
+    # Далее следует пример описания таблицы в формате SQLAlchemy ORM.
+    # Для корректной работы ORM необходимо всем полям с типом Text и
+    # которые не будут иметь значения NULL добавить primary_key=True
+    
+    ЦФО = Column(Text, primary_key=True)
+    Родитель = Column(Text, primary_key=True)
+    Код = Column(Text, primary_key=True)
+    Наименование = Column(Text, primary_key=True)
+    ПометкаУдаления = Column(Boolean)
+```
+
+### Добавление новой Pydantic схемы (app/schemas)
+
+```python
+# Ниже приведен пример описания схемы. Названия полей должны совпадать 
+# с названиями, указанными в одноименном файле с описанием модели таблицы
+
+class CatalogCfo(TemplateModel):    # Наследуемся от TemplateModel
+    ЦФО: str
+    Родитель: str
+    Код: str
+    Наименование: str
+    ПометкаУдаления: bool
+```

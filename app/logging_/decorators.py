@@ -9,6 +9,7 @@ logger = get_logger('')
 
 
 def try_except_wrap(func):
+    """Декоратор для обработки ошибок"""
     @wraps(func)
     def inner_func(*args, **kwargs):
         try:
@@ -21,6 +22,7 @@ def try_except_wrap(func):
 
 
 def logging_this(operation: Operations = None, task: Operations = None, summary=False, timing=False):
+    """Декоратор логгера"""
     def inner_func(func):
         @wraps(func)
         def wrapper(*args, **kwargs):

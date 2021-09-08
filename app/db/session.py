@@ -8,6 +8,7 @@ from app.config.dwh_db import DWHDBSettings
 
 
 def dumps(d):
+    """Используется для корректной сериализации PG JSON"""
     return json.dumps(d, ensure_ascii=False)
 
 

@@ -6,7 +6,19 @@ from app.config.email_settings import EmailSettings
 
 
 class BufferingSMTPHandler(BufferingHandler, EmailSettings):
-    def __init__(self, capacity):
+    """
+    Отправка результатов работы логгера по SMTP после
+    завершения работы программы
+    """
+    def __init__(self, capacity: int):
+        """
+        Parameters
+        ----------
+
+        capacity : int
+            Количество строк в буфере сообщений
+        """
+
         super().__init__(capacity)
         self.PORT = smtplib.SMTP_PORT if self.PORT is None else self.PORT
         self.msg = EmailMessage()

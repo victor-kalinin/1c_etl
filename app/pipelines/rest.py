@@ -16,11 +16,16 @@ from app.core.enums import Operations
 
 class Rest:
     def __init__(self, db: Session, alias_name: str):
+        """Базовый ETL класс для работы с данными
+
+        :param db: Объект сессии SQLAlchemy подключения к БД
+        :param alias_name: Имя класса таблицы из описания модели SQLAlchemy
+        """
         self.alias_name = alias_name
         self.db = db
-        self.http = self._set_request_session_()
         self.module_models = importlib.import_module(consts.MODELS_MODULE_PATH(alias_name))
         self.module_schemas = importlib.import_module(consts.SCHEMAS_MODULE_PATH(alias_name))
+        self.http = self._set_request_session_()
         self.settings = self._fill_settings_()
 
     @staticmethod
@@ -35,12 +40,16 @@ class Rest:
         return http
 
     def _fill_settings_(self):
+        """Заполнение атрибутов класса параметрами из файла *.ini
+
+        :return: Объект settings
+        """
         api_module = importlib.import_module(consts.API_CONN_MODULE_PATH(self.alias_name))
         class_name = [m[0] for m in inspect.getmembers(api_module, inspect.isclass)
                       if m[1].__module__ == api_module.__name__][0]
         return fill_settings(getattr(api_module, class_name)())
 
-    def _url_(self, _route_path: str):
+    def _url_(self, _route_path: str) -> str:
         return ''.join((self.settings.API_PATH, _route_path))
 
     def _request_(self, url: str):
@@ -53,39 +62,63 @@ class Rest:
         return self.db.execute(sql, values).fetchall()
 
     @logging_this(operation=Operations.TASK, task=Operations.LOAD, summary=True, timing=True)
-    def _loading_many_(self, model_name: str, data: List[BaseModel]):
+    def _loading_many_(self, model_name: str, data: List[BaseModel]) -> int:
         for item in data:
             self.load(model_name, item)
         return len(data)
 
     @logging_this(operation=Operations.TASK, task=Operations.EXTRACT, summary=True, timing=True)
     def extract(self, url: str, schema_name: str, **kwargs):
+        """Получение данных из REST API
+
+        :param url: Строка адреса с route api
+        :param schema_name: Название схемы данных в формате Pydantic
+        :param kwargs: Дополнительные параметры для декоратора логгера
+        :return: Список объектов записей в Pydantic нотации
+        """
         schema = getattr(self.module_schemas, schema_name)
         res = self._request_(url)
         res_dict = json.loads(res.content.decode())
         return parse_obj_as(List[schema], res_dict)
 
     def transform(self):
+        """Выполняются преобразования в полученных данных"""
         raise NotImplemented
 
     @logging_this(operation=Operations.TASK, task=Operations.CLEAR, summary=True, timing=True)
-    def clear_all(self, model_name: str):
+    def clear_all(self, model_name: str) -> int:
+        """Удаление всех данных в таблице
+
+        :param model_name: Имя класса таблицы из описания модели SQLAlchemy
+        :return: Количество удаленных строк
+        """
         model = getattr(self.module_models, model_name)
         num_rows_deleted = self.db.query(model).delete()
         self.db.commit()
         return num_rows_deleted
 
-    def clear(self, model_name: str, **kwargs):
-        self.clear_all(model_name)
+    def clear(self, model_name: str, **kwargs) -> int:
+        return self.clear_all(model_name)
 
     def load(self, model_name: str, item: BaseModel):
+        """Запись данных в таблицу в БД
+
+        :param model_name: Имя класса таблицы из описания модели SQLAlchemy
+        :param item: объект записи в Pydantic нотации
+        """
         model = getattr(self.module_models, model_name)
         row = model(**item.__dict__)
         self.db.add(row)
         self.db.commit()
 
-    def start(self, table_class=None, clear=False):
-        def etl(_table_class, _route_path):
+    def start(self, table_class: str = None, clear: bool = False) -> None:
+        def etl(_table_class: str, _route_path: str) -> int:
+            """ETL конвеер для обработки данных
+
+            :param _table_class: Имя класса таблицы из описания модели SQLAlchemy
+            :param _route_path: Строка адреса с route api
+            :return: Количество обработанных строк
+            """
             if clear:
                 return self.clear_all(model_name=_table_class)
 

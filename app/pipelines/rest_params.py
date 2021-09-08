@@ -8,10 +8,21 @@ from app.core.enums import Operations
 
 class RestParams(Rest):
     def __init__(self, db, alias_name, month_scope: Dict):
+        """Класс для работы с данными с возможностью фильтрации по заданному полю
+
+        :param db: Объект сессии SQLAlchemy подключения к БД
+        :param alias_name: Название класса таблицы из модели описания
+        :param month_scope: Словарь с параметрами периода выборки {'from': datetime, 'to': datetime}
+        """
         super().__init__(db, alias_name)
         self.month_scope = month_scope
 
     def _month_scope_t_(self, func):
+        """Преобразование данных :month_scope с помощью заданной функции
+
+        :param func: Функция для преобразования данных :month_scope
+        :return: Преобразованный словарь :month_scope
+        """
         return {key: func(value) for key, value in self.month_scope.items()}
 
     def _request_(self, url: str):
@@ -22,7 +33,12 @@ class RestParams(Rest):
         return self._month_scope_t_(lambda x: x.strftime('%d.%m.%Y'))
 
     @logging_this(operation=Operations.TASK, task=Operations.CLEAR, summary=True, timing=True)
-    def clear(self, model_name: str):
+    def clear(self, model_name: str) -> int:
+        """Удаление данных в таблице с использованием поля фильтра в описании модели SQLAlchemy
+
+        :param model_name: Имя класса таблицы из описания модели SQLAlchemy
+        :return: Количество удаленных строк
+        """
         model = getattr(self.module_models, model_name)
         filter_field = getattr(model, model.__filterfield__)
         num_rows_deleted = self.db.query(model).filter(

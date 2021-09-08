@@ -7,6 +7,8 @@ from .base import Base
 
 
 def create_new_db():
+    """Создание таблиц в БД из описаний моделей"""
+
     modules_list = get_modules_names(MODELS_DIR_PATH)
     for models_name in modules_list:
         importlib.import_module(f'app.models.{models_name}')

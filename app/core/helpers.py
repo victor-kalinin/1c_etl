@@ -8,29 +8,22 @@ from glob import glob
 
 from app.core.enums import Direction
 from app.core.consts import MODELS_DIR_PATH, CREDENTIALS_PATH
-from app.core.templates.db_settings import DBSettings
-from app.core.templates.api_settings import APISettings
 
 
-def fill_settings(settings_obj: (APISettings, DBSettings)):
+def fill_settings(settings_obj):
+    """Заполнение объекта с настроками значениями credentials из файла *.ini
+
+    :param settings_obj: object :APISettings or :DBSettings
+    :return: Исходный объект с заполненными атрибутами
     """
-    Заполнение объекта с настроками значениями credentials из файла *.ini
-
-    Parameters
-    ----------
-    settings_obj : object `APISettings` or `DBSettings`
-        Пустой объект для заполнения.
-
-    Returns
-    -------
-    Исходный объект с заполненными атрибутами
-    """
-
     config = configparser.ConfigParser()
     config.read(CREDENTIALS_PATH)
-    attrs = [attr for attr in dir(settings_obj) if not attr.startswith('_')]    # Формируем список основных атрибутов
-    # Находим в файле .ini ключ с таким же именем как и атрибут объекта,
-    # заполняем значениями. Если исходное значение в объекте непустое - пропускаем
+
+    # Формируем список основных атрибутов. Исключаем дандеры (_ и __)
+    attrs = [attr for attr in dir(settings_obj) if not attr.startswith('_')]
+
+    # Находим в файле .ini ключ с таким же именем как и атрибут объекта, заполняем значениями.
+    # Если исходное значение в объекте непустое - пропускаем
     try:
         for attr in attrs:
             value = config[settings_obj.CONFIG_KEY].get(attr)
@@ -43,21 +36,12 @@ def fill_settings(settings_obj: (APISettings, DBSettings)):
 
 
 def month_scope(months: int, direction: Direction) -> Dict:
+    """Формирование словаря с диапазоном периода для выгрузки
+
+    :param months: Количество месяцев в диапазоне
+    :param direction: Направление формирования периода
+    :return: Словарь {'from': datetime, 'to': datetime}
     """
-    Формирование словаря с диапазоном периода для выгрузки
-
-    Parameters
-    ----------
-    months : int
-        Количество месяцев в диапазоне
-    direction : Direction
-        Направление формирования периода
-
-    Returns
-    -------
-    Словарь {'from': datetime, 'to': datetime}
-    """
-
     today = datetime.today()
     delta_months = today + relativedelta(months=months) * direction.value
     return {'from': min(today, delta_months),
@@ -65,36 +49,21 @@ def month_scope(months: int, direction: Direction) -> Dict:
 
 
 def get_modules_names(path: str) -> Dict:
+    """Формирование словаря с названиями модулей без *.py
+
+    :param path: Путь к каталогу с файлами
+    :return: Словарь {'name_of_file': 'path_to_file/name_of_file'}
     """
-    Формирование словаря с названиями модулей без *.py
-
-    Parameters
-    ----------
-    path : str
-        Путь к каталогу с файлами
-
-    Returns
-    -------
-    Словарь {'name_of_file': 'path_to_file/name_of_file'}
-    """
-
     modules = glob(join(path, "*.py"))
     return {basename(f)[:-3]: join(path, basename(f)) for f in modules
             if isfile(f) and not f.endswith('__init__.py')}
 
 
 def get_alias_group(alias_name: str) -> str:
-    """
-    Получение название группы модулей.
+    """Получение названия группы модулей
 
-    Parameters
-    ----------
-    alias_name : str
-        Полное название файла без расширения
-
-    Returns
-    -------
-    Строка
+    :param alias_name: Полное название файла без расширения
+    :return: Название группы
 
     Notes
     -----
@@ -103,23 +72,21 @@ def get_alias_group(alias_name: str) -> str:
 
     Examples
     --------
-    models_do_params  ->  params \n
+    models_do_params  ->  params
+
     models_do         ->  static
     """
-
     splitted_name = alias_name.rsplit('_', -1)
     return splitted_name[-1] if len(splitted_name) > 1 else 'static'
 
 
 def get_tables_dict() -> Dict:
-    """
-    Получение словаря с перечислением имен физических таблиц и их параметров.
+    """Получение словаря с перечислением имен физических таблиц и их параметров
 
-    Returns
-    -------
-    Словарь вида: {'name_of_table_in_db': {'alias': 'alias_name',
-                                           'table_class': 'name_of_class_in_models',
-                                           'group': 'alias_group'}
+    :return: Словарь {'name_of_table_in_db':
+                                        {'alias': 'alias_name',
+                                         'table_class': 'name_of_class_in_models',
+                                         'group': 'alias_group'}
                     ... }
 
     Examples
@@ -129,7 +96,6 @@ def get_tables_dict() -> Dict:
                                'group': 'static'}
      ... }
     """
-
     table_dict = {}
     for module_name, module_path in get_modules_names(MODELS_DIR_PATH).items():
         with open(module_path, encoding='utf-8') as f:
@@ -149,16 +115,9 @@ def get_tables_dict() -> Dict:
 
 
 def get_alias_from_tablename(tablename: str) -> Dict:
-    """
-    Получение словаря с параметрами для одной таблицы.
+    """Получение словаря с параметрами для одной таблицы
 
-    Parameters
-    ----------
-    tablename : str
-        Имя физической таблицы в БД
-
-    Returns
-    -------
-    Словарь вида `get_tables_dict()`
+    :param tablename: Имя физической таблицы в БД
+    :return: Словарь вида :get_tables_dict()
     """
     return get_tables_dict().get(tablename, None)

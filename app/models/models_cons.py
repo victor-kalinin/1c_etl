@@ -48,3 +48,36 @@ class CatalogScenariy(Base):
     Родитель = Column(Text, primary_key=True)
     Наименование = Column(Text, primary_key=True)
     ПометкаУдаления = Column(Boolean)
+
+
+class CatalogAccount(Base):
+    __tablename__ = 'rs1c_cons_catalog_account'
+    __table_args__ = {'schema': 'rsrc'}
+
+    Счет = Column(Text, primary_key=True)
+    Код = Column(Text, primary_key=True)
+    Наименование = Column(Text, primary_key=True)
+    ПометкаУдаления = Column(Boolean)
+
+
+class CatalogBankAccount(Base):
+    __tablename__ = 'rs1c_cons_catalog_bank_account'
+    __table_args__ = {'schema': 'rsrc'}
+
+    БанковскийСчет = Column(Text, primary_key=True)
+    Организация = Column(Text, primary_key=True)
+    Валютный = Column(Boolean)
+    Валюта = Column(Text)
+    Наименование = Column(Text, primary_key=True)
+    ПометкаУдаления = Column(Boolean)
+
+
+class CatalogStDDS(Base):
+    __tablename__ = 'rs1c_cons_catalog_st_dds'
+    __table_args__ = {'schema': 'rsrc'}
+
+    СтатьяДДС = Column(Text, primary_key=True)
+    ЭтоГруппа = Column(Boolean)
+    Родитель = Column(Text, primary_key=True)
+    Наименование = Column(Text, primary_key=True)
+    ПометкаУдаления = Column(Boolean)

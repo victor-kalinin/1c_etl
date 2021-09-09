@@ -18,3 +18,17 @@ class ConsAccum(TemplateModel):
     ЭтоПлан: bool
     ЭтоВнутригрупповойОборот: bool
     ЭтоКорректировка: bool
+
+
+class ConsCashflow(TemplateModel):
+    Период: datetime
+    Организация: str
+    СтатьяДДС: str
+    Валюта: Optional[str]
+    БанковскийСчет: str
+    Счет: str
+    Контрагент: Optional[str]
+    ВГО: bool
+    СуммаОборот: float
+    СуммаПриход: float
+    СуммаРасход: float

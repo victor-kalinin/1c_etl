@@ -7,4 +7,7 @@ class ConsSettings(APISettings):
               'CatalogStOb': '/catalog?name=StOb',
               'CatalogNg': '/catalog?name=NomenclatureGroups',
               'CatalogScenariy': '/catalog?name=Scenariy',
+              'CatalogAccount': '/catalog?name=Account',
+              'CatalogBankAccount': '/catalog?name=BankAccount',
+              'CatalogStDDS': '/catalog?name=StDDS',
               }

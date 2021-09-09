@@ -18,8 +18,8 @@ LOG_FILENAME = '1cetl.log'
 API_RETRY_COUNT = 3
 
 # Словарь с ключами баз данных из файла *.ini с credentials
-DWH_ENV_KEYS = {'PROD': '__',               # Добавлен dunder для запрета случайной отправки данных в PROD GP.
-                'DEV': 'DWHDev',            # После переноса в production добавить значение 'DWHProd'
+DWH_ENV_KEYS = {'PROD': 'DWHProd',
+                'DEV': 'DWHDev',
                 'STAGE': 'DWHStage'}
 
 # Полный путь к каталогу хранения файлов с моделями БД

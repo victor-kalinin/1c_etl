@@ -1,13 +1,16 @@
+import sys
+from os import environ, getcwd
+sys.path.append(getcwd())
+
 from sqlalchemy import Table, Column, Integer, String, DateTime, Boolean, Float, Text, JSON, MetaData
 from sqlalchemy.dialects.postgresql import UUID
-from os import environ
-
 from app.core.consts import ENV_KEYNAME
 environ[ENV_KEYNAME] = 'STAGE'
 
-from .session import engine
+from app.db.session import engine
 
 
+print('Инициализация базы данных ... ', end='')
 metadata = MetaData()
 
 ConsCatalogCfo = Table('rs1c_cons_catalog_cfo', metadata,
@@ -511,4 +514,45 @@ CommonWorkDaysCalendar = Table('common_work_days_calendar', metadata,
                                Column('prev_dt_delta', Float),
                                schema='nrml')
 
+CatalogAccount = Table('rs1c_cons_catalog_account', metadata,
+                       Column('Счет', Text),
+                       Column('Код', Text),
+                       Column('Наименование', Text),
+                       Column('ПометкаУдаления', Boolean),
+                       schema='rsrc')
+
+CatalogBankAccount = Table('rs1c_cons_catalog_bank_account', metadata,
+                           Column('БанковскийСчет', Text),
+                           Column('Организация', Text),
+                           Column('Валютный', Boolean),
+                           Column('Валюта', Text),
+                           Column('Наименование', Text),
+                           Column('ПометкаУдаления', Boolean),
+                           schema='rsrc')
+
+CatalogStDDS = Table('rs1c_cons_catalog_st_dds', metadata,
+                     Column('СтатьяДДС', Text),
+                     Column('ЭтоГруппа', Boolean),
+                     Column('Родитель', Text),
+                     Column('Наименование', Text),
+                     Column('ПометкаУдаления', Boolean),
+                     schema='rsrc')
+
+ConsCashflow = Table('rs1c_cons_cashflow', metadata,
+                     Column('Период', DateTime),
+                     Column('Организация', Text),
+                     Column('СтатьяДДС', Text),
+                     Column('Валюта', Text),
+                     Column('БанковскийСчет', Text),
+                     Column('Счет', Text),
+                     Column('Контрагент', Text),
+                     Column('ВГО', Boolean),
+                     Column('СуммаОборот', Float),
+                     Column('СуммаПриход', Float),
+                     Column('СуммаРасход', Float),
+                     Column('ДатаЗагрузки', DateTime),
+                     schema='rsrc')
+
+
 metadata.create_all(engine)
+print('Выполнено')

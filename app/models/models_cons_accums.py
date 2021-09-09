@@ -23,3 +23,22 @@ class ConsAccum(Base):
     ЭтоВнутригрупповойОборот = Column(Boolean)
     ЭтоКорректировка = Column(Boolean)
     ДатаЗагрузки = Column(DateTime, default=datetime.now)
+
+
+class ConsCashflow(Base):
+    __tablename__ = 'rs1c_cons_cashflow'
+    __table_args__ = {'schema': 'rsrc'}
+    __filterfield__ = 'Период'
+
+    Период = Column(DateTime)
+    Организация = Column(Text, primary_key=True)
+    СтатьяДДС = Column(Text, primary_key=True)
+    Валюта = Column(Text)
+    БанковскийСчет = Column(Text, primary_key=True)
+    Счет = Column(Text, primary_key=True)
+    Контрагент = Column(Text)
+    ВГО = Column(Boolean)
+    СуммаОборот = Column(Float)
+    СуммаПриход = Column(Float)
+    СуммаРасход = Column(Float)
+    ДатаЗагрузки = Column(DateTime, default=datetime.now)

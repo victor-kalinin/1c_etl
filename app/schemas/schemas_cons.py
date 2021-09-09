@@ -34,3 +34,27 @@ class CatalogScenariy(TemplateModel):
     Родитель: str
     Наименование: str
     ПометкаУдаления: bool
+
+
+class CatalogAccount(TemplateModel):
+    Счет: str
+    Код: str
+    Наименование: str
+    ПометкаУдаления: bool
+
+
+class CatalogBankAccount(TemplateModel):
+    БанковскийСчет: str
+    Организация: str
+    Валютный: bool
+    Валюта: str
+    Наименование: str
+    ПометкаУдаления: bool
+
+
+class CatalogStDDS(TemplateModel):
+    СтатьяДДС: str
+    ЭтоГруппа: bool
+    Родитель: str
+    Наименование: str
+    ПометкаУдаления: bool

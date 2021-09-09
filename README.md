@@ -10,7 +10,7 @@
 ## Клонирование проекта
 
 ```commandline
-git clone http://gitlab.ru.mgo.su/vkalinin/1cetl.git
+git clone http://gitlab.ru.mgo.su/dwh/1cetl.git
 ```
 
 ## Запуск с помощью Docker
